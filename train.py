@@ -60,12 +60,11 @@ def main():
     train_con = (dm.get_data('train_data')['train.context'])
     train_span = (dm.get_data('train_data')['train.span'])
 
-    '''
-    print (train_con)
+
+    #print (train_con)
     l = [jieba.cut(sentence, cut_all=False) for sentence in train_con]
-    for i in l[3]:
-        print (i,)
-    '''
+    print ('|'.join(l[0]))
+
     word2vec_model = 'save/med250.model.bin'
     dm.sequence2matrix(word2vec_model)
 
