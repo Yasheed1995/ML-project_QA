@@ -2,7 +2,7 @@
 import os
 import tensorflow as tf
 import numpy as np
-
+import jieba
 
 class DataManager:
     def __init__(self):
