@@ -2,11 +2,6 @@
 import os
 import tensorflow as tf
 import numpy as np
-from keras.preprocessing.text import text_to_word_sequence
-#from keras.preprocessing.text import Tokenizer
-#from keras.preprocessing.sequence import pad_sequences
-#from keras.utils import to_categorical
-
 
 
 class DataManager:
@@ -47,57 +42,71 @@ class DataManager:
     # Build dictionary
     #  vocab_size : maximum number of word in yout dictionary
     def sequence2matrix(self,  word2vec_model):
-        question_size = 50
-        context_size = 400
+        question_size = 20
+        context_size = 300
         word_vec_size = 250
         print ('sequence to matrix ing...')
         for key in self.data.keys():
             print ("key in data: ", key)
-            if key == 'train_data':
+            if key == 'train_data' or key == 'test_data':
                 for kee in self.data[key].keys():
-                    print ('converting %s to vec...' % key)
+                    print ('converting %s: %s to vec...' % (key, kee))
                     texts = self.data[key][kee]
-                    texts = np.array(texts)
-                    print ("shape of texts: ", texts.shape)
-                    if kee == 'train.context':
-                        train_context_matrix = []
-                        for i in range(texts.shape[0]):
-                            sequence = text_to_word_sequence(texts[i], filters='\t\n')
+                    
+                    if kee[-7:] == 'context':
+                    
+                        context_matrix = []
+                        
+                        for context in texts:
                             tmp = []
-                            for j in range(context_size):
-                                if (j < len(sequence)):
-                                    print (j)
-                                    print (sequence[j])
-                                    tmp.append(word2vec_model[sequence[j]])
+                            words = list(jieba.cut(context, cut_all=False))
+                            for i in range(context_size):
+                                if i < len(words):
+                                    try:
+                                        tmp.append(word2vec_model[words[i]])
+                                    except KeyError:
+                                        #print ("%s not found" % word)
+                                        tmp.append(np.zeros(shape=(word_vec_size,)))
                                 else:
-                                    tmp.append(np.zeros(word_vec_size,))
-                            train_context_matrix.append(np.array(tmp))
-                            print ('processed: ' + str(i) + '\r')
+                                    tmp.append(np.zeros(shape=(word_vec_size,)))
+                                    
+                            context_matrix.append(np.array(tmp))
 
-                        train_context_matrix = np.array(train_context_matrix)
-                        print (train_context_matrix)
-                        print ('context.shape: ' + str(train_context_matrix.shape))
-                        np.save('save/train_context_matrix.npy', train_context_matrix)
-                    elif kee == 'train.question':
-                        train_question_matrix = []
-                        for i in range(texts.shape[0]):
-                            sequence = text_to_word_sequence(texts[i], filters='\t\n')
+                        context_matrix = np.array(context_matrix)
+                        print (context_matrix)
+                        print ('context.shape: ' + str(context_matrix.shape))
+                        if key == 'train_data':
+                            self.train_context_matrix = context_matrix
+                            np.save('save/train_context_matrix.npy', self.train_context_matrix)
+                        else:
+                            self.test_context_matrix = context_matrix
+                            np.save('save/test_context_matrix.npy', self.train_context_matrix)
+                    elif kee[-8:] == 'question':
+                        question_matrix = []
+                        for question in texts:
                             tmp = []
-                            for j in range(question_size):
-                                if (j < len(sequence)):
-                                    print (j)
-                                    print (sequence[j])
-                                    tmp.append(word2vec_model[sequence[j]])
+                            words = list(jieba.cut(question, cut_all=False))
+                            for i in range(question_size):
+                                if i < len(words):
+                                    try:
+                                        tmp.append(word2vec_model[words[i]])
+                                    except KeyError:
+                                        #print ("%s not found" % word)
+                                        tmp.append(np.zeros(shape=(word_vec_size,)))
                                 else:
-                                    tmp.append(np.zeros(word_vec_size,))
-                            train_context_matrix.append(np.array(tmp))
-                            print ('processed: ' + str(i) + '\r')
+                                    tmp.append(np.zeros(shape=(word_vec_size,)))
+                                    
+                            question_matrix.append(np.array(tmp))
 
-                        train_question_matrix = np.array(train_question_matrix)
-                        print (train_question_matrix)
-                        print ('context.shape: ' + str(train_question_matrix.shape))
-                        np.save('save/train_question_matrix.npy', train_question_matrix)
-
+                        question_matrix = np.array(question_matrix)
+                        print (question_matrix)
+                        print ('question.shape: ' + str(question_matrix.shape))
+                        if key == 'train_data':
+                            self.train_question_matrix = question_matrix
+                            np.save('save/train_question_matrix.npy', self.train_question_matrix)
+                        else:
+                            self.test_question_matrix = question_matrix
+                            np.save('save/test_question_matrix.npy', self.test_question_matrix)     
 
     # Save tokenizer to specified path
     def save_tokenizer(self,  path):
@@ -157,5 +166,3 @@ class DataManager:
         data_size = len(X)
         val_size = int(data_size * ratio)
         return (X[val_size:], Y[val_size:]), (X[:val_size], Y[:val_size])
-
-

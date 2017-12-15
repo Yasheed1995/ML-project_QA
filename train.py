@@ -4,6 +4,9 @@ from util import DataManager
 import pandas as pd
 import os
 import sys, argparse, os
+from gensim.models import word2vec
+from gensim import models
+import logging
 
 parser = argparse.ArgumentParser(description='Sentiment classification')
 #parser.add_argument('model')
@@ -48,24 +51,65 @@ args = parser.parse_args()
 def main():
     dm = DataManager()
     print ('Loading data...')
-    if args.action == 'train':
-        dm.add_data('train_data', args.d_base_dir, True)
-    else:
-        print ('Implement your testing parser')
-        dm.add_data('test_data', args.d_base_dir, False)
+    dm.add_data('train_data', 'feature', True)
+    dm.add_data('test_data', 'feature', False)
+    
 
     train_id = (dm.get_data('train_data')['train.question.id'])
     train_q = (dm.get_data('train_data')['train.question'])
     train_ans = (dm.get_data('train_data')['train.answer'])
     train_con = (dm.get_data('train_data')['train.context'])
     train_span = (dm.get_data('train_data')['train.span'])
+    
+    test_id = (dm.get_data('test_data')['test.question.id'])
+    test_q = (dm.get_data('test_data')['test.question'])
+    test_con = (dm.get_data('test_data')['test.context'])
 
-
-    #print (train_con)
+    word2vec_model = models.Word2Vec.load('save/med250.model.bin')
+    '''
+    for i in range(1):
+        print (train_con[i])
+    print (len(train_con))
+    
+    for word in train_con[0]:
+        try:
+            print (word2vec_model[word])
+        except KeyError:
+            print ('EEEEEEEE')
+    
     l = [jieba.cut(sentence, cut_all=False) for sentence in train_con]
     print ('|'.join(l[0]))
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    
+    vec_matrix = []
+    
+    try:
+        for context in test_con:
+           
+            tmp = []
+            words = list(jieba.cut(context, cut_all=False))
+            for i in range(300):
+                if i < len(words):
+                    try:
+                        tmp.append(word2vec_model[words[i]])
+                    except KeyError:
+                        #print ("%s not found" % word)
+                        tmp.append(np.zeros(shape=(250,)))
+                else:
+                    tmp.append(np.zeros(shape=(250,)))
+            tmp = np.array(tmp)
+            
+            vec_matrix.append(tmp)
+        vec_matrix = np.array(vec_matrix)
+        print (vec_matrix)
+        for i in range(100):
+            print (vec_matrix[i].shape)
+        
+    except KeyError:
+        pass
+    '''
+    
 
-    word2vec_model = 'save/med250.model.bin'
     dm.sequence2matrix(word2vec_model)
 
 
