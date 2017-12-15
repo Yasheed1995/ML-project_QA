@@ -8,13 +8,12 @@ from gensim.models import word2vec
 from gensim import models
 import logging
 
-parser = argparse.ArgumentParser(description='Sentiment classification')
+parser = argparse.ArgumentParser(description='Final Project QA')
 #parser.add_argument('model')
 parser.add_argument('--action', default='train')
 
 #parser.add_argument('--train_path', default='data/training_label.txt', type=str)
 #parser.add_argument('--test_path', default='data/testing_data.txt', type=str)
-#parser.add_argument('--semi_path', default='data/training_nolabel.txt', type=str)
 
 parser.add_argument('--d_base_dir', default='feature')
 
@@ -54,7 +53,7 @@ def main():
     dm.add_data('train_data', 'feature', True)
     dm.add_data('test_data', 'feature', False)
     
-
+    print ('getting data...')
     train_id = (dm.get_data('train_data')['train.question.id'])
     train_q = (dm.get_data('train_data')['train.question'])
     train_ans = (dm.get_data('train_data')['train.answer'])
@@ -65,7 +64,10 @@ def main():
     test_q = (dm.get_data('test_data')['test.question'])
     test_con = (dm.get_data('test_data')['test.context'])
 
+    print ('loading model...')
     word2vec_model = models.Word2Vec.load('save/med250.model.bin')
+
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     '''
     for i in range(1):
         print (train_con[i])
@@ -109,12 +111,41 @@ def main():
         pass
     '''
     
-
+    print ('seq 2 matrix...')
     dm.sequence2matrix(word2vec_model)
 
+    print ('initial model...')
+    model = build_model(args)
+    print (model.summary())
+
+    if args.load_model is not None:
+        if args.action == 'train':
+            print ('Warning: load an exist model and keep training')
+            model.load_weights('model/model.h5')
+        else:
+            pass
+    else args.action == 'test':
+        print ('Warning: testing without loading any model')
+
+    if args.action == 'train':
+        pass
+        # define input, input shape
+
+        # earlystop
+
+        # save model path
+
+        # checkpoint
+
+        # fit 
+
+        # save history
+
+    elif args.action == 'test':
+        pass
 
 
-
+    
 
 if __name__ == '__main__':
     main()
